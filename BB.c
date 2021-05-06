@@ -215,7 +215,6 @@ void plot_dissipazione() //mostro il grafico della Stopping Power fino a quando 
 		*/
 		gam = 1/sqrt(1-pow(beta,2)); //calcolo il corrispondente gamma
 		y=m*gam; //energia cinetica relativistica della particella prima che impatti contro il materiale
-		inc = 0.001; //spessore infinitesimo in cm;
 		for(;y>=0;i++) //eseguo il ciclo finchè l'energia cinetica è 0
 		{
 			de=-bethe_bloch(beta)*INC; //perdita di energia infinitesima
