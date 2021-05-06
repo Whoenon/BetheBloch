@@ -42,9 +42,9 @@ float TEXT_SIZE=0.30;
 float MAX_SPESSORE = 1000;
 
 //valori fissi per l'interfaccia grafica
-Double_t w = 1250;
+/*Double_t w = 1250;
 Double_t h = 800;
-
+*/
 void BB() 
 {
 	TCanvas * main_window = new TCanvas("main_window","Bethe-Bloch");
@@ -52,9 +52,10 @@ void BB()
 	TPad* pad2 = new TPad("pad2", "Buttons", 0.90, 0, 1, 1, 38);
 	pad1->Draw();
 	pad2->Draw();
+	/*
 	main_window->SetCanvasSize(w, h);
 	main_window->SetWindowSize(w, h);
-	
+	*/
 	//Uso pad2 per organizzare i miei bottoni
 	pad2->cd();
 	
@@ -102,7 +103,7 @@ void BB()
 	dissipazione_button->SetTextSize(TEXT_SIZE);
 	dissipazione_button->Draw();
 	
-	clear_button = new TButton("Cancella grafico", "", 0, 0.3,1,0.25);
+	clear_button = new TButton("Cancella grafico", "pulisci()", 0, 0.3,1,0.25);
 	clear_button->SetTextSize(TEXT_SIZE);
 	clear_button->Draw();
 	
@@ -117,6 +118,15 @@ void exit_here()
         cout << "exiting root by running\ngROOT->ProcessLine(\".q\")\n";
         gROOT->ProcessLine(".q");
 }
+
+void pulisci()
+{
+ /*     
+ 	cout << "ripulisco eseguendo \ngROOT->pad1->Draw()\n";
+        	gROOT->pad1->Draw();
+*/
+}
+
 
 //Qui puoi selezionare il tuo proiettile e caricarne i valori
 void particle(int k)
@@ -139,14 +149,14 @@ void particle(int k)
 //Qui puoi selezionare il bersaglio
 void atomic_number(int l)
 {
-	if (l == 0){
+	if (l == 0) {
 		Z = 26;
 		A = 53.9396;
 		cout << "Ferro selezionato." << endl;
 		} 
 	if (l == 1) { 
 		Z = 79;
-		A = 196.9666;
+		A = 196.9665;
 		cout << "Oro selezionato." << endl; 
 		}
 	if (l == 2) { 
@@ -162,21 +172,20 @@ void atomic_number(int l)
 	}
 }
 
-	//Bethe-bloch function
-double bethe_bloch(double gam, double beta)
+
+double bethe_bloch(double beta) //Uno strumento che utilizzeremo molto spesso
 {
 	mrel = me/m;
+	double gam = 1/sqrt(1-pow(beta,2));
 	double Tmax = 2*me*pow(gam*beta,2)/(1+(2*gam*mrel)+pow(mrel,2));
 	//determino I
 	double I = Z*10;
 	//applico Bethe-bloch 
-	double func = K*pow(z_particle,2)*(Z/A)*(1/pow(beta,2))*(0.5*log(2*me*pow(beta*gam,2)*Tmax/pow(I,2))-pow(beta,2));
+	double func = K*pow(z_particle,2)*(Z/A)*pow(beta,-2)*(0.5*log(2*me*Tmax*pow(beta*gam/I,2))-pow(beta,2));
 	//restituisco il valore
 	return func;
 }
-
-//Plotto i valori
-void draw_graph()
+void draw_graph() //Calcolo e plotto i valori di Bethe_Bloch
 {
 	double beta_min = betagamma_min/sqrt(1+pow(betagamma_min,2));
 	double beta_max = betagamma_max/sqrt(1+pow(betagamma_max,2));
@@ -184,30 +193,21 @@ void draw_graph()
 	graph->SetTitle("Formula di Bethe-Bloch; #gamma*#beta; - #frac{dE}{dx} [MeV]"); //imposto il titolo del grafico e il nome degli assi
    	graph->GetXaxis()->CenterTitle(true);	
    	graph->GetYaxis()->CenterTitle(true);	
-		//Assegno diversi colori in base al materiale del bersaglio
-		if (Z == 26){
-		graph->SetLineColor(28);
-		}
-		if (Z == 47){
-		graph->SetLineColor(16);
-		}
-		if (Z == 79){
-		graph->SetLineColor(5);
-		}
-		if (Z == 13){
-		graph->SetLineColor(12);
-		}
-	if (Z == 0 || m == 0){
-		cout << "Seleziona una configurazione iniziale." << endl;
-		}
-	else {
+	//Assegno diversi colori in base al materiale del bersaglio
+	if (Z == 26){graph->SetLineColor(28);}
+	if (Z == 47){graph->SetLineColor(16);}
+	if (Z == 79){graph->SetLineColor(5);}
+	if (Z == 13){graph->SetLineColor(12);}
+	if (Z == 0 || m == 0){cout << "Seleziona una configurazione iniziale." << endl;}
+	else 
+	{
 		double x,y;
 		double delta_beta = (beta_max-beta_min)/incrementi;
 		long int i=0;
-		for (double beta = beta_min; beta < beta_max; beta = beta+delta_beta) {
-			//gamma
+		for (double beta = beta_min; beta < beta_max; beta = beta+delta_beta)
+		{
 			double gam = 1/sqrt(1-beta*beta);
-			y=bethe_bloch(gam, beta)*pow(10,-6);
+			y=bethe_bloch(beta)*pow(10,-6); //con un fattore di scala 10^-6 per mostrare i valori in MeV
 			x=beta*gam;
 			graph->SetPoint(i++,x,y);
 		}
@@ -217,40 +217,39 @@ void draw_graph()
 	gPad->SetLogy();
 	graph->Draw();
 	}
-	
-	
 }
-void plot_dissipazione()
-	{
-	if (Z == 0 || m == 0){
-	cout << "Seleziona una configurazione iniziale." << endl;
-	}
-	else {
 		
+	void plot_dissipazione() //mostro il grafico della Stopping Power fino a quando la particella si arresta
+{
+	if (Z == 0 || m == 0)
+	{
+		cout << "Seleziona una configurazione iniziale." << endl;
+	}
+	else
+	{
 		TGraph* graph = new TGraph(); //creo un grafico
-		graph->SetTitle("Dissipazione Energia; Lunghezza percorso [cm]; - Stopping Power #frac{[MeV]}{[cm]}");
+		graph->SetTitle("Dissipazione Energia; Spessore percorso dalla particella [cm]; Stopping Power #frac{[MeV]}{[cm]}");
 		graph->GetXaxis()->CenterTitle(true);	
    		graph->GetYaxis()->CenterTitle(true);
-		long int i=0;
 		double x,inc, beta, gam, y,de;
+		long int i=0;
 		x=0;
-		beta=0.6;
-		gam = 1/sqrt(1-beta*beta);
-		y=m*gam;
-		de=bethe_bloch(gam,beta);
-		inc = 0.005;
-		for(;y>0;)
+		beta=0.2; //fornisco il beta della particella
+		gam = 1/sqrt(1-pow(beta,2)); //calcolo il corrispondente gamma
+		y=m*gam; //energia cinetica relativistica della particella prima che impatti contro il materiale
+		inc = 0.001 //spessore infinitesimo in cm;
+		for(;y>=0;i++) //eseguo il ciclo finchè l'energia cinetica è 0
 		{
-		de=-bethe_bloch(gam,beta)*inc;
-		graph->SetPoint(i++,x,-de*pow(10,-6));
-		x = x+inc;
-		y = y+de;
-		beta = sqrt(1-((m*m)/(y*y)));
-		gam = 1/sqrt(1-(beta*beta));
+			de=-bethe_bloch(beta)*inc; //perdita di energia infinitesima
+			graph->SetPoint(i,x,-de*pow(10,-6)); //faccio il plot "spazio percorso vs energia dissipata"
+			x = x+inc; //mi sposto un po in avanti rispetto al punto di collisione
+			y = y+de; //calcolo la perdita di energia cinetica (col segno più perchè de è negativa)
+			beta = sqrt(1-(pow(m/y,2))); //calcolo il nuovo beta corrispondente alla nuova energia
+			gam = 1/sqrt(1-(pow(beta,2))); //calcolo il nuovo gamma corrispondente al nuovo beta
 		}
-		graph->SetLineWidth(4);
+		graph->SetLineWidth(3);
 		gPad->SetLogy();
 		//gPad->SetLogx();
 		graph->Draw();
 	}
-	}
+}
