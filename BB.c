@@ -210,9 +210,6 @@ void plot_dissipazione() //mostro il grafico della Stopping Power fino a quando 
 		long int i=0;
 		x=0; //distanza percorsa nel bersaglio
 		beta=0.2; //fornisco il beta della particella
-		/*
-		TO DO: INSERISCI CASELLA DI TESTO CHE PRENDA IL VALORE DI BETA COME INPUT, VERIFICA SE MINORE DI UNO E MAGGIORE DI ZERO, E LO ASSEGNA ALLA VARIABILE
-		*/
 		gam = 1/sqrt(1-pow(beta,2)); //calcolo il corrispondente gamma
 		y=m*gam; //energia cinetica relativistica della particella prima che impatti contro il materiale
 		for(;y>=0;i++) //eseguo il ciclo finchè l'energia cinetica è 0
